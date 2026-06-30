@@ -3,8 +3,14 @@ from django.db import transaction
 from ninja import Router
 
 from notification.models import Notification, NotificationEmail, NotificationSMS
-from notification.schemas import ErrorOut, NotificationScheduleIn
-from notification.schemas import NotificationScheduleOut
+from notification.schemas import (
+    ErrorOut,
+    MessageOut,
+    NotificationScheduleIn,
+    NotificationScheduleOut,
+    StateReportIn,
+)
+from notification.state_reports import enqueue_state_reports
 
 router = Router()
 
@@ -15,13 +21,15 @@ def list_notifications(request):
     return []
 
 
-@router.post("/")
-def update_notifications(request):
+@router.post("/", response={202: MessageOut})
+def update_notifications(request, payload: StateReportIn | list[StateReportIn]):
     """Ingest a lifecycle state report or a list of them (see CHALLENGE.md, Task 2).
 
     Report shape: see ``samples/state_reports.json``.
     """
-    return []
+    reports = payload if isinstance(payload, list) else [payload]
+    enqueue_state_reports(reports)
+    return 202, {"detail": "ok"}
 
 
 @router.post(
