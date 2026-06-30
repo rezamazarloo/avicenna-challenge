@@ -1,4 +1,55 @@
 services:
+  app:
+    build:
+      context: .
+    container_name: avicenna-app
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3}"
+    environment: &app_environment
+      POSTGRES_DB: ${POSTGRES_DB:-avicenna}
+      POSTGRES_USER: ${POSTGRES_USER:-avicenna}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-avicenna}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      NOTIFICATION_REDIS_URL: redis://redis:6379/0
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on: &app_dependencies
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery:
+    build:
+      context: .
+    container_name: avicenna-celery
+    restart: unless-stopped
+    command: celery -A config worker --loglevel=info --queues=notifications
+    environment: *app_environment
+    depends_on: *app_dependencies
+
+  celery-beat:
+    build:
+      context: .
+    container_name: avicenna-celery-beat
+    restart: unless-stopped
+    command: celery -A config beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    environment: *app_environment
+    depends_on: *app_dependencies
+
+  consumer:
+    build:
+      context: .
+    container_name: avicenna-consumer
+    restart: unless-stopped
+    command: python manage.py consume_state_reports
+    environment: *app_environment
+    depends_on: *app_dependencies
+
   postgres:
     image: postgres:17
     container_name: avicenna-postgres
