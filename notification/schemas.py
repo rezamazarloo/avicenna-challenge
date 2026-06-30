@@ -1,9 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from ninja import Schema
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
+
+StateReportStatus = Literal[
+    "sent",
+    "delivered",
+    "opened",
+    "bounced",
+    "failed",
+    "undelivered",
+]
 
 
 class EmailScheduleIn(Schema):
@@ -36,6 +46,24 @@ class NotificationScheduleIn(Schema):
 
 class ErrorOut(Schema):
     detail: str
+
+
+class MessageOut(Schema):
+    detail: str
+
+
+class StateReportIn(Schema):
+    tracking_id: str = Field(min_length=1, max_length=64)
+    status: StateReportStatus
+    occurred_at: datetime
+    received_at: datetime
+
+    @field_validator("occurred_at", "received_at")
+    @classmethod
+    def require_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+            raise ValueError("Timestamp must include a timezone.")
+        return value
 
 
 class EmailScheduleOut(Schema):
