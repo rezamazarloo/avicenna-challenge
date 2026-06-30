@@ -14,6 +14,13 @@ StateReportStatus = Literal[
     "failed",
     "undelivered",
 ]
+NotificationStatusOut = Literal[
+    "pending",
+    "sent",
+    "delivered",
+    "opened",
+    "failed",
+]
 
 
 class EmailScheduleIn(Schema):
@@ -87,3 +94,20 @@ class NotificationScheduleOut(Schema):
     user: str
     deliver_at: datetime
     channels: ChannelsScheduleOut
+
+
+class ChannelStatusOut(Schema):
+    status: str | None = None
+
+
+class NotificationChannelsOut(Schema):
+    email: ChannelStatusOut | None = None
+    sms: ChannelStatusOut | None = None
+
+
+class NotificationOut(Schema):
+    id: int
+    user: str
+    deliver_at: datetime
+    status: NotificationStatusOut
+    channels: NotificationChannelsOut

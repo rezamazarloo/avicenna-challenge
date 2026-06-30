@@ -6,19 +6,25 @@ from notification.models import Notification, NotificationEmail, NotificationSMS
 from notification.schemas import (
     ErrorOut,
     MessageOut,
+    NotificationOut,
     NotificationScheduleIn,
     NotificationScheduleOut,
     StateReportIn,
 )
 from notification.state_reports import enqueue_state_reports
+from notification.utils import serialize_notification
 
 router = Router()
 
 
-@router.get("/")
+@router.get("/", response=list[NotificationOut])
 def list_notifications(request):
     """List notifications, each with a single status (see CHALLENGE.md, Task 3)."""
-    return []
+    notifications = (
+        Notification.objects.select_related("user", "email", "sms")
+        .order_by("-created_at", "-id")
+    )
+    return [serialize_notification(notification) for notification in notifications]
 
 
 @router.post("/", response={202: MessageOut})
