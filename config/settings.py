@@ -1,6 +1,10 @@
+import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # Dev-only settings. This is a take-home scaffold, not production.
 SECRET_KEY = "dev-only-insecure-key"
@@ -30,11 +34,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# SQLite keeps the scaffold zero-setup. Swap to Postgres if you prefer.
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "avicenna"),
+        "USER": os.getenv("POSTGRES_USER", "avicenna"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "avicenna"),
+        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 
