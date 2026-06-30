@@ -6,3 +6,4 @@ venv/
 .env
 .ruff_cache
 uv.lock
+*schedule*

@@ -61,6 +61,10 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "60"))
 CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "50"))
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+if os.getenv("CELERY_WORKER_POOL"):
+    CELERY_WORKER_POOL = os.environ["CELERY_WORKER_POOL"]
+elif os.name == "nt":
+    CELERY_WORKER_POOL = "solo"
 CELERY_TASK_DEFAULT_QUEUE = "notifications"
 CELERY_BEAT_SCHEDULE = {
     "enqueue-due-notifications-every-minute": {
