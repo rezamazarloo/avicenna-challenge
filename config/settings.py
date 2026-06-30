@@ -51,3 +51,24 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = None
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_TASK_STORE_ERRORS_EVEN_IF_IGNORED = False
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "60"))
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "50"))
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_DEFAULT_QUEUE = "notifications"
+CELERY_BEAT_SCHEDULE = {
+    "enqueue-due-notifications-every-minute": {
+        "task": "notification.tasks.enqueue_due_notifications",
+        "schedule": 60.0,
+    },
+}
+
+NOTIFICATION_ENQUEUE_BATCH_SIZE = int(
+    os.getenv("NOTIFICATION_ENQUEUE_BATCH_SIZE", "100")
+)
